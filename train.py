@@ -37,11 +37,11 @@ def LoadFeatures(args):
     #log_time("Loading feature ELMo")
     #Read1DFeature(args.tmp_dir+"/ELMo.txt", ELMo_test_dic)
     log_time("Loading feature BERT")
-    Read1DFeature(args.tmp_dir+"/BERT_3mer.txt", BERT_test_dic)
+    Read1DFeature(args.tmp_dir+"/BERT.txt", BERT_test_dic)
     #log_time("Loading feature ELMo full")
-    #ReadELMoFeature(args.tmp_dir+"/ELMo_n.txt", ELMo_test_dic)
+    #ReadELMoFeature(args.tmp_dir+"/ELMo_n.txt", ELMo_test_dic, 1024)
     #log_time("Loading feature BERT full")
-    #ReadBERTFeature(args.tmp_dir+"/BERT_n.txt", BERT_test_dic)
+    #ReadBERTFeature(args.tmp_dir+"/BERT_n.txt", BERT_test_dic, 768)
     log_time("Loading feature HSP")
     Read1DFeature(args.tmp_dir + "/HSP.txt", HSP_test_dic)
     log_time("Loading feature POSITION")
@@ -365,16 +365,10 @@ def LoadLabelsAndFormatFeatures(args):
          PSSM_3D_np_10, PSSM_3D_np_11, PSSM_3D_np_12, PSSM_3D_np_13, PSSM_3D_np_14, PSSM_3D_np_15, PSSM_3D_np_16,
          PSSM_3D_np_17, PSSM_3D_np_18, PSSM_3D_np_19, PSSM_3D_np_20, POSITION_3D_np), axis=2)
 		 
-    #print("Add ELMo features")
-    #for i in range(0,1024):
-    	#ELMo_tmp = []
-    	#for j in range(0,len(ELMo_2DList)):
-        	#ELMo_tmp.append(ELMo_2DList[j][i])
-    	#ELMo_3D_np = Convert2DListTo3DNp(args, ELMo_tmp)
-    	#all_features_3D_np = np.concatenate((all_features_3D_np, ELMo_3D_np), axis=2)
-		
-    #print("Add BERT features")
-    #for i in range(0,768):
+    #ELMo_dim = 1024
+    #BERT_dim = 768
+
+    #for i in range(0,BERT_dim):
     	#BERT_tmp = []
     	#for j in range(0,len(BERT_2DList)):
         	#BERT_tmp.append(BERT_2DList[j][i])
@@ -440,9 +434,9 @@ def BuildModel(args):
         out = Dense(1, activation='sigmoid', name="new_dense2")(out)
         model = Model(inputs=input_features, outputs=out)
         logging.info("loading weight CNN")
-        model.load_weights("/home/sbasak3/DELPHI/models/CNN_BERT_3mer+.h5",by_name=True)
+        model.load_weights("/home/sbasak3/DELPHI/models/CNN_BERT+.h5",by_name=True)
         logging.info("loading weight RNN")
-        model.load_weights("/home/sbasak3/DELPHI/models/RNN_BERT_3mer+.h5",by_name=True)
+        model.load_weights("/home/sbasak3/DELPHI/models/RNN_BERT+.h5",by_name=True)
     else:
         logging.error("model_structure error")
         exit(1)

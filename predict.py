@@ -89,21 +89,8 @@ def Read1DFeature(input_fn, dict):
             break
         dict[line_PID] = get_array_of_float_from_a_line(line_feature, ',')
 
-# load ELMo and write to dict
-def ReadELMoFeature(input_fn, dict):
-    fin = open(input_fn, "r")
-    while True:
-        line_PID = fin.readline().rstrip('\n').rstrip(' ')
-        line_Pseq = fin.readline().rstrip('\n').rstrip(' ')
-        if not line_PID:
-            break
-        dict[line_PID] = []
-        for i in range(0,1024):
-            line_feature = fin.readline().rstrip('\n').rstrip(' ')
-            dict[line_PID].append(get_array_of_float_from_a_line(line_feature, ','))
-
 # load BERT and write to dict
-def ReadBERTFeature(input_fn, dict):
+def ReadnDFeature(input_fn, dict, n):
     fin = open(input_fn, "r")
     while True:
         line_PID = fin.readline().rstrip('\n').rstrip(' ')
@@ -111,7 +98,7 @@ def ReadBERTFeature(input_fn, dict):
         if not line_PID:
             break
         dict[line_PID] = []
-        for i in range(0,768):
+        for i in range(0,n):
             line_feature = fin.readline().rstrip('\n').rstrip(' ')
             dict[line_PID].append(get_array_of_float_from_a_line(line_feature, ','))
 
@@ -136,9 +123,9 @@ def LoadFeatures(args):
     log_time("Loading feature BERT")
     Read1DFeature(args.tmp_dir+"/BERT.txt", BERT_test_dic)
     #log_time("Loading feature ELMo full")
-    #ReadELMoFeature(args.tmp_dir+"/ELMo_n.txt", ELMo_test_dic)
+    #ReadnDFeature(args.tmp_dir+"/ELMo_n.txt", ELMo_test_dic, 1024)
     #log_time("Loading feature BERT full")
-    #ReadBERTFeature(args.tmp_dir+"/BERT_n.txt", BERT_test_dic)
+    #ReadBERTFeature(args.tmp_dir+"/BERT_n.txt", BERT_test_dic, 768)
     log_time("Loading feature HSP")
     Read1DFeature(args.tmp_dir+"/HSP.txt", HSP_test_dic)
     log_time("Loading feature POSITION")
@@ -436,16 +423,10 @@ def LoadLabelsAndFormatFeatures(args):
          PSSM_3D_np_10, PSSM_3D_np_11, PSSM_3D_np_12, PSSM_3D_np_13, PSSM_3D_np_14, PSSM_3D_np_15, PSSM_3D_np_16,
          PSSM_3D_np_17, PSSM_3D_np_18, PSSM_3D_np_19, PSSM_3D_np_20, POSITION_3D_np), axis=2)
 		 
-    #print("Add ELMo features")
-    #for i in range(0,1024):
-    	#ELMo_tmp = []
-    	#for j in range(0,len(ELMo_2DList)):
-        	#ELMo_tmp.append(ELMo_2DList[j][i])
-    	#ELMo_3D_np = Convert2DListTo3DNp(args, ELMo_tmp)
-    	#all_features_3D_np = np.concatenate((all_features_3D_np, ELMo_3D_np), axis=2)
-		
-    #print("Add BERT features")
-    #for i in range(0,768):
+    #ELMo_dim = 1024
+    #BERT_dim = 768
+
+    #for i in range(0,BERT_dim):
     	#BERT_tmp = []
     	#for j in range(0,len(BERT_2DList)):
         	#BERT_tmp.append(BERT_2DList[j][i])

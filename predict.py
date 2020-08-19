@@ -125,7 +125,7 @@ def LoadFeatures(args):
     #log_time("Loading feature ELMo full")
     #ReadnDFeature(args.tmp_dir+"/ELMo_n.txt", ELMo_test_dic, 1024)
     #log_time("Loading feature BERT full")
-    #ReadBERTFeature(args.tmp_dir+"/BERT_n.txt", BERT_test_dic, 768)
+    #ReadnDFeature(args.tmp_dir+"/BERT_n.txt", BERT_test_dic, 768)
     log_time("Loading feature HSP")
     Read1DFeature(args.tmp_dir+"/HSP.txt", HSP_test_dic)
     log_time("Loading feature POSITION")

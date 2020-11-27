@@ -3,6 +3,7 @@ import os
 import logging
 import datetime
 from keras.models import load_model
+from keras_self_attention import SeqSelfAttention
 import time
 import argparse
 
@@ -14,10 +15,10 @@ def Predict(args, test_all_features_np3D):
         os.makedirs(args.out_dir)
     if (args.cpu == 1):
         log_time("using the CPU model")
-        model = load_model("models/DELPHI_cpu_BERT.h5")
+        model = load_model("models/DELPHI_cpu_v2.h5")
     elif (args.cpu == 0):
         log_time("using the GPU model")
-        model = load_model("models/DELPHI_gpu_BERT.h5")
+        model = load_model("models/DELPHI_gpu_v2.h5")
     else:
         print("{Error]: invalid option! -c can be either 1:cpu or 0:gpu")
         exit(1)
@@ -90,7 +91,7 @@ def Read1DFeature(input_fn, dict):
         dict[line_PID] = get_array_of_float_from_a_line(line_feature, ',')
 
 # load BERT and write to dict
-def ReadnDFeature(input_fn, dict, n):
+def ReadBERTFeature(input_fn, dict):
     fin = open(input_fn, "r")
     while True:
         line_PID = fin.readline().rstrip('\n').rstrip(' ')
@@ -98,7 +99,7 @@ def ReadnDFeature(input_fn, dict, n):
         if not line_PID:
             break
         dict[line_PID] = []
-        for i in range(0,n):
+        for i in range(0,100):
             line_feature = fin.readline().rstrip('\n').rstrip(' ')
             dict[line_PID].append(get_array_of_float_from_a_line(line_feature, ','))
 
@@ -116,16 +117,12 @@ def LoadFeatures(args):
     Read1DFeature(args.tmp_dir+"/HYD.txt", HYD_test_dic)
     log_time("Loading feature PKA")
     Read1DFeature(args.tmp_dir+"/PKA.txt", PKA_test_dic)
-    log_time("Loading feature Pro2Vec_1D")
-    Read1DFeature(args.tmp_dir+"/Pro2Vec_1D.txt", Pro2Vec_1D_test_dic)
-    #log_time("Loading feature ELMo")
-    #Read1DFeature(args.tmp_dir+"/ELMo.txt", ELMo_test_dic)
+    #log_time("Loading feature Pro2Vec_1D")
+    #Read1DFeature(args.tmp_dir+"/Pro2Vec_1D.txt", Pro2Vec_1D_test_dic)
     log_time("Loading feature BERT")
     Read1DFeature(args.tmp_dir+"/BERT.txt", BERT_test_dic)
-    #log_time("Loading feature ELMo full")
-    #ReadnDFeature(args.tmp_dir+"/ELMo_n.txt", ELMo_test_dic, 1024)
     #log_time("Loading feature BERT full")
-    #ReadnDFeature(args.tmp_dir+"/BERT_n.txt", BERT_test_dic, 768)
+    #ReadBERTFeature(args.tmp_dir+"/BERT_n.txt", BERT_test_dic)
     log_time("Loading feature HSP")
     Read1DFeature(args.tmp_dir+"/HSP.txt", HSP_test_dic)
     log_time("Loading feature POSITION")
@@ -209,8 +206,7 @@ def LoadLabelsAndFormatFeatures(args):
     ECO_2DList = []
     RAA_2DList = []
     RSA_2DList = []
-    Pro2Vec_1D_2DList = []
-    #ELMo_2DList = []
+    #Pro2Vec_1D_2DList = []
     BERT_2DList = []
     Anchor_2DList = []
     HSP_2DList = []
@@ -259,8 +255,7 @@ def LoadLabelsAndFormatFeatures(args):
         list1D_ECO = ECO_test_dic[line_PID]
         list1D_RAA = RAA_test_dic[line_PID]
         list1D_RSA = RSA_test_dic[line_PID]
-        list1D_Pro2Vec_1D = Pro2Vec_1D_test_dic[line_PID]
-        #list1D_ELMo = ELMo_test_dic[line_PID]
+        #list1D_Pro2Vec_1D = Pro2Vec_1D_test_dic[line_PID]
         list1D_BERT = BERT_test_dic[line_PID]
         list1D_Anchor = Anchor_test_dic[line_PID]
         list1D_HSP = HSP_test_dic[line_PID]
@@ -302,8 +297,7 @@ def LoadLabelsAndFormatFeatures(args):
         ECO_2DList.append(list1D_ECO)
         RAA_2DList.append(list1D_RAA)
         RSA_2DList.append(list1D_RSA)
-        Pro2Vec_1D_2DList.append(list1D_Pro2Vec_1D)
-        #ELMo_2DList.append(list1D_ELMo)
+        #Pro2Vec_1D_2DList.append(list1D_Pro2Vec_1D)
         BERT_2DList.append(list1D_BERT)
         Anchor_2DList.append(list1D_Anchor)
         HSP_2DList.append(list1D_HSP)
@@ -347,8 +341,7 @@ def LoadLabelsAndFormatFeatures(args):
     ECO_3D_np = Convert2DListTo3DNp(args, ECO_2DList)
     RAA_3D_np = Convert2DListTo3DNp(args, RAA_2DList)
     RSA_3D_np = Convert2DListTo3DNp(args, RSA_2DList)
-    Pro2Vec_1D_3D_np = Convert2DListTo3DNp(args, Pro2Vec_1D_2DList)
-    #ELMo_3D_np = Convert2DListTo3DNp(args, ELMo_2DList)
+    #Pro2Vec_1D_3D_np = Convert2DListTo3DNp(args, Pro2Vec_1D_2DList)
     BERT_3D_np = Convert2DListTo3DNp(args, BERT_2DList)
     Anchor_3D_np = Convert2DListTo3DNp(args, Anchor_2DList)
     HSP_3D_np = Convert2DListTo3DNp(args, HSP_2DList)
@@ -404,8 +397,7 @@ def LoadLabelsAndFormatFeatures(args):
             PHY_Prop_3D_np_5.shape ==
             PHY_Prop_3D_np_6.shape ==
             PHY_Prop_3D_np_7.shape ==
-            Pro2Vec_1D_3D_np.shape ==
-            #ELMo_3D_np.shape ==
+            #Pro2Vec_1D_3D_np.shape ==
             BERT_3D_np.shape ==
             HSP_3D_np.shape ==
             PSSM_3D_np_20.shape ==
@@ -413,25 +405,28 @@ def LoadLabelsAndFormatFeatures(args):
             POSITION_3D_np.shape)
 
     all_features_3D_np = np.concatenate(
-        (ECO_3D_np, RAA_3D_np, RSA_3D_np, Pro2Vec_1D_3D_np,
-         #ELMo_3D_np,
+        (ECO_3D_np,
+         RAA_3D_np, 
+         RSA_3D_np, 
+         #Pro2Vec_1D_3D_np,
          BERT_3D_np,
-         Anchor_3D_np, HSP_3D_np, HYD_3D_np, PKA_3D_np,
-         PHY_Char_3D_np_1, PHY_Char_3D_np_2, PHY_Char_3D_np_3, PHY_Prop_3D_np_1, PHY_Prop_3D_np_2, PHY_Prop_3D_np_3,
-         PHY_Prop_3D_np_4, PHY_Prop_3D_np_5, PHY_Prop_3D_np_6, PHY_Prop_3D_np_7, PSSM_3D_np_1, PSSM_3D_np_2,
-         PSSM_3D_np_3, PSSM_3D_np_4, PSSM_3D_np_5, PSSM_3D_np_6, PSSM_3D_np_7, PSSM_3D_np_8, PSSM_3D_np_9,
-         PSSM_3D_np_10, PSSM_3D_np_11, PSSM_3D_np_12, PSSM_3D_np_13, PSSM_3D_np_14, PSSM_3D_np_15, PSSM_3D_np_16,
-         PSSM_3D_np_17, PSSM_3D_np_18, PSSM_3D_np_19, PSSM_3D_np_20, POSITION_3D_np), axis=2)
-		 
-    #ELMo_dim = 1024
-    #BERT_dim = 768
-
-    #for i in range(0,BERT_dim):
-    	#BERT_tmp = []
-    	#for j in range(0,len(BERT_2DList)):
-        	#BERT_tmp.append(BERT_2DList[j][i])
-    	#BERT_3D_np = Convert2DListTo3DNp(args, BERT_tmp)
-    	#all_features_3D_np = np.concatenate((all_features_3D_np, BERT_3D_np), axis=2)
+         Anchor_3D_np, 
+         HSP_3D_np, 
+         HYD_3D_np, 
+         PKA_3D_np,
+         PHY_Char_3D_np_1, PHY_Char_3D_np_2, PHY_Char_3D_np_3, 
+         PHY_Prop_3D_np_1, PHY_Prop_3D_np_2, PHY_Prop_3D_np_3, PHY_Prop_3D_np_4, PHY_Prop_3D_np_5, PHY_Prop_3D_np_6, PHY_Prop_3D_np_7, 
+         PSSM_3D_np_1, PSSM_3D_np_2, PSSM_3D_np_3, PSSM_3D_np_4, PSSM_3D_np_5, PSSM_3D_np_6, PSSM_3D_np_7, PSSM_3D_np_8, PSSM_3D_np_9, PSSM_3D_np_10, PSSM_3D_np_11, PSSM_3D_np_12, PSSM_3D_np_13, PSSM_3D_np_14, PSSM_3D_np_15, PSSM_3D_np_16,PSSM_3D_np_17, PSSM_3D_np_18, PSSM_3D_np_19, PSSM_3D_np_20, 
+         POSITION_3D_np
+         ), axis=2)
+		
+    # print("Add BERT features")
+    # for i in range(0,100):
+    # 	BERT_tmp = []
+    # 	for j in range(0,len(BERT_2DList)):
+    #     	BERT_tmp.append(BERT_2DList[j][i])
+    # 	BERT_3D_np = Convert2DListTo3DNp(args, BERT_tmp)
+    # 	all_features_3D_np = np.concatenate((all_features_3D_np, BERT_3D_np), axis=2)
 
     return all_features_3D_np
 
@@ -454,7 +449,6 @@ ECO_test_dic = {}
 RAA_test_dic = {}
 RSA_test_dic = {}
 Pro2Vec_1D_test_dic = {}
-ELMo_test_dic = {}
 BERT_test_dic = {}
 Anchor_test_dic = {}
 HSP_test_dic = {}

@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --account=ctb-ilie_cpu
 #SBATCH --partition=shadowfax
-#SBATCH --nodelist=dus27
-#SBATCH --cpus-per-task=32
-#SBATCH --mem=1000G
-#SBATCH --time=1-00:00
+#SBATCH --nodelist=dus31
+#SBATCH --cpus-per-task=12
+#SBATCH --mem=250G
+#SBATCH --time=5-00:00
 
 source /home/sbasak3/DELPHI/dusky/bin/activate
 
@@ -13,12 +13,20 @@ source /home/sbasak3/DELPHI/dusky/bin/activate
 # Usage: ./run_DELPHI.sh [INPUT_FN]
 which python
 export PRO_DIR=$PWD
-export INPUT_FN=${PRO_DIR}/Datasets/Dset_72_Pid_Pseq.txt
+export INPUT_FN=${PRO_DIR}/Datasets/Dset_448_Pid_Pseq.txt
+export INPUT_FN_LABEL=${PRO_DIR}/Datasets/Dset_448_Pid_Pseq_label.txt
 export OUT_DIR=${PRO_DIR}/out-$(date +%Y-%m-%d-%H-%M-%S)
 export TMP_DIR=${PRO_DIR}/tmp-$(date +%Y-%m-%d-%H-%M-%S)
 
 echo "PRO_DIR: $PRO_DIR"
 echo "TMP_DIR: $TMP_DIR"
+
+#####################
+#check PSSM database#
+#####################
+#PSSM_DIR=${TMP_DIR}/PSSM_raw/1/
+#echo "load_PSSM_DB"
+#python3 utils/load_PSSM_DB.py ${INPUT_FN} ${TMP_DIR}/PSSM_raw/1
 
 ####################
 # compute features#
@@ -33,3 +41,9 @@ if [ $? -ne 0 ]
 then
    echo "[Error:] DELPHI returns 1!"
 fi
+
+# ################################
+# #    Performance Evaluation   ##
+# ################################
+
+python3 ${PRO_DIR}/utils/performance_evaluation.py $OUT_DIR $INPUT_FN_LABEL Dset_448

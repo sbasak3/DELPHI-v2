@@ -14,7 +14,7 @@ import time
 import argparse
 from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.utils import class_weight
-from predict import log_time, get_array_of_float_from_a_line, Read1DFeature, ReadELMoFeature, ReadBERTFeature, Split1Dlist2NpArrays, \
+from predict import log_time, get_array_of_float_from_a_line, Read1DFeature, ReadBERTFeature, Split1Dlist2NpArrays, \
     Split2DList2NpArrays, Convert2DListTo3DNp
 
 
@@ -32,16 +32,12 @@ def LoadFeatures(args):
     Read1DFeature(args.tmp_dir + "/HYD.txt", HYD_test_dic)
     log_time("Loading feature PKA")
     Read1DFeature(args.tmp_dir + "/PKA.txt", PKA_test_dic)
-    log_time("Loading feature Pro2Vec_1D")
-    Read1DFeature(args.tmp_dir + "/Pro2Vec_1D.txt", Pro2Vec_1D_test_dic)
-    #log_time("Loading feature ELMo")
-    #Read1DFeature(args.tmp_dir+"/ELMo.txt", ELMo_test_dic)
+    #log_time("Loading feature Pro2Vec_1D")
+    #Read1DFeature(args.tmp_dir + "/Pro2Vec_1D.txt", Pro2Vec_1D_test_dic)
     log_time("Loading feature BERT")
     Read1DFeature(args.tmp_dir+"/BERT.txt", BERT_test_dic)
-    #log_time("Loading feature ELMo full")
-    #ReadnDFeature(args.tmp_dir+"/ELMo_n.txt", ELMo_test_dic, 1024)
     #log_time("Loading feature BERT full")
-    #ReadnDFeature(args.tmp_dir+"/BERT_n.txt", BERT_test_dic, 768)
+    #ReadBERTFeature(args.tmp_dir+"/BERT_n.txt", BERT_test_dic)
     log_time("Loading feature HSP")
     Read1DFeature(args.tmp_dir + "/HSP.txt", HSP_test_dic)
     log_time("Loading feature POSITION")
@@ -124,7 +120,7 @@ def GetProgramArguments():
                           help='float: drop out rate.')
     optional.add_argument('-dn', '--dense', type=int, default=96,
                           help='int, dense unit numbers in the ensemble model')
-    optional.add_argument('-bs', '--batch_size', type=int, default=100, help='int: batch size in learning model')
+    optional.add_argument('-bs', '--batch_size', type=int, default=1024, help='int: batch size in learning model')
     optional.add_argument('-unit', '--lstm_unit', type=int, default=32, help='int: number of units in LSTM model')
     optional.add_argument('-ks', '--kernel_size', type=int, default=5, help='int: kernel size in convolution')
     optional.add_argument('-fil', '--filter_size', type=int, default=64, help='int: filter size in convolution')
@@ -141,8 +137,7 @@ def LoadLabelsAndFormatFeatures(args):
     ECO_2DList = []
     RAA_2DList = []
     RSA_2DList = []
-    Pro2Vec_1D_2DList = []
-    #ELMo_2DList = []
+    #Pro2Vec_1D_2DList = []
     BERT_2DList = []
     Anchor_2DList = []
     HSP_2DList = []
@@ -196,8 +191,7 @@ def LoadLabelsAndFormatFeatures(args):
         list1D_ECO = ECO_test_dic[line_PID]
         list1D_RAA = RAA_test_dic[line_PID]
         list1D_RSA = RSA_test_dic[line_PID]
-        list1D_Pro2Vec_1D = Pro2Vec_1D_test_dic[line_PID]
-        #list1D_ELMo = ELMo_test_dic[line_PID]
+        #list1D_Pro2Vec_1D = Pro2Vec_1D_test_dic[line_PID]
         list1D_BERT = BERT_test_dic[line_PID]
         list1D_Anchor = Anchor_test_dic[line_PID]
         list1D_HSP = HSP_test_dic[line_PID]
@@ -239,8 +233,7 @@ def LoadLabelsAndFormatFeatures(args):
         ECO_2DList.append(list1D_ECO)
         RAA_2DList.append(list1D_RAA)
         RSA_2DList.append(list1D_RSA)
-        Pro2Vec_1D_2DList.append(list1D_Pro2Vec_1D)
-        #ELMo_2DList.append(list1D_ELMo)
+        #Pro2Vec_1D_2DList.append(list1D_Pro2Vec_1D)
         BERT_2DList.append(list1D_BERT)
         Anchor_2DList.append(list1D_Anchor)
         HSP_2DList.append(list1D_HSP)
@@ -287,8 +280,7 @@ def LoadLabelsAndFormatFeatures(args):
     ECO_3D_np = Convert2DListTo3DNp(args, ECO_2DList)
     RAA_3D_np = Convert2DListTo3DNp(args, RAA_2DList)
     RSA_3D_np = Convert2DListTo3DNp(args, RSA_2DList)
-    Pro2Vec_1D_3D_np = Convert2DListTo3DNp(args, Pro2Vec_1D_2DList)
-    #ELMo_3D_np = Convert2DListTo3DNp(args, ELMo_2DList)
+    #Pro2Vec_1D_3D_np = Convert2DListTo3DNp(args, Pro2Vec_1D_2DList)
     BERT_3D_np = Convert2DListTo3DNp(args, BERT_2DList)
     Anchor_3D_np = Convert2DListTo3DNp(args, Anchor_2DList)
     HSP_3D_np = Convert2DListTo3DNp(args, HSP_2DList)
@@ -346,8 +338,7 @@ def LoadLabelsAndFormatFeatures(args):
             PHY_Prop_3D_np_5.shape ==
             PHY_Prop_3D_np_6.shape ==
             PHY_Prop_3D_np_7.shape ==
-            Pro2Vec_1D_3D_np.shape ==
-            #ELMo_3D_np.shape ==
+            #Pro2Vec_1D_3D_np.shape ==
             BERT_3D_np.shape ==
             HSP_3D_np.shape ==
             PSSM_3D_np_20.shape ==
@@ -355,20 +346,21 @@ def LoadLabelsAndFormatFeatures(args):
             POSITION_3D_np.shape)
 
     all_features_3D_np = np.concatenate(
-        (ECO_3D_np, RAA_3D_np, RSA_3D_np, Pro2Vec_1D_3D_np,
-         #ELMo_3D_np,
+        (ECO_3D_np, RAA_3D_np,
+         RSA_3D_np, 
+         #Pro2Vec_1D_3D_np,
          BERT_3D_np,
-         Anchor_3D_np, HSP_3D_np, HYD_3D_np, PKA_3D_np,
-         PHY_Char_3D_np_1, PHY_Char_3D_np_2, PHY_Char_3D_np_3, PHY_Prop_3D_np_1, PHY_Prop_3D_np_2, PHY_Prop_3D_np_3,
-         PHY_Prop_3D_np_4, PHY_Prop_3D_np_5, PHY_Prop_3D_np_6, PHY_Prop_3D_np_7, PSSM_3D_np_1, PSSM_3D_np_2,
-         PSSM_3D_np_3, PSSM_3D_np_4, PSSM_3D_np_5, PSSM_3D_np_6, PSSM_3D_np_7, PSSM_3D_np_8, PSSM_3D_np_9,
-         PSSM_3D_np_10, PSSM_3D_np_11, PSSM_3D_np_12, PSSM_3D_np_13, PSSM_3D_np_14, PSSM_3D_np_15, PSSM_3D_np_16,
-         PSSM_3D_np_17, PSSM_3D_np_18, PSSM_3D_np_19, PSSM_3D_np_20, POSITION_3D_np), axis=2)
-		 
-    #ELMo_dim = 1024
-    #BERT_dim = 768
-
-    #for i in range(0,BERT_dim):
+         Anchor_3D_np, 
+         HSP_3D_np, 
+         HYD_3D_np, 
+         PKA_3D_np,
+         PHY_Char_3D_np_1, PHY_Char_3D_np_2, PHY_Char_3D_np_3, 
+         PHY_Prop_3D_np_1, PHY_Prop_3D_np_2, PHY_Prop_3D_np_3, PHY_Prop_3D_np_4, PHY_Prop_3D_np_5, PHY_Prop_3D_np_6, PHY_Prop_3D_np_7, 
+         PSSM_3D_np_1, PSSM_3D_np_2, PSSM_3D_np_3, PSSM_3D_np_4, PSSM_3D_np_5, PSSM_3D_np_6, PSSM_3D_np_7, PSSM_3D_np_8, PSSM_3D_np_9, PSSM_3D_np_10, PSSM_3D_np_11, PSSM_3D_np_12, PSSM_3D_np_13, PSSM_3D_np_14, PSSM_3D_np_15, PSSM_3D_np_16, PSSM_3D_np_17, PSSM_3D_np_18, PSSM_3D_np_19, PSSM_3D_np_20, 
+         POSITION_3D_np), axis=2)
+		
+    #print("Add BERT features")
+    #for i in range(0,768):
     	#BERT_tmp = []
     	#for j in range(0,len(BERT_2DList)):
         	#BERT_tmp.append(BERT_2DList[j][i])
@@ -380,7 +372,7 @@ def LoadLabelsAndFormatFeatures(args):
 
 
 def BuildModel(args):
-    num_feature = 40
+    num_feature = 39
     logging.info("Building model...")
     model = Sequential()
     # the RNN sub-component
@@ -390,6 +382,7 @@ def BuildModel(args):
             GRU(name="gru_right", activation="tanh", recurrent_activation="sigmoid", units=args.lstm_unit,
                 return_sequences=True, unroll=False, use_bias=True, reset_after=True, recurrent_dropout=0.3),
             name="bidirectional_right")(input_features)
+        #out = Bidirectional(CuDNNGRU(name="gru_right", units=args.lstm_unit, return_sequences=True), name="bidirectional_right")(input_features)
         out = Dropout(rate=args.drop_out)(out)
         out = Flatten()(out)
         out = Dense(64, activation='sigmoid', name="dense_RNN_1")(out)
@@ -424,6 +417,7 @@ def BuildModel(args):
             GRU(name="gru_right", activation="tanh", recurrent_activation="sigmoid", units=args.lstm_unit,
                 return_sequences=True, unroll=False, use_bias=True, reset_after=True, recurrent_dropout=0.3),
             name="bidirectional_right", trainable=False)(input_features)
+        #out2 = Bidirectional(CuDNNGRU(name="gru_right", units=args.lstm_unit, return_sequences=True), name="bidirectional_right", trainable=False)(input_features)
         out2 = Dropout(rate=args.drop_out)(out2)
         out2 = Flatten()(out2)
         # merge
@@ -434,9 +428,9 @@ def BuildModel(args):
         out = Dense(1, activation='sigmoid', name="new_dense2")(out)
         model = Model(inputs=input_features, outputs=out)
         logging.info("loading weight CNN")
-        model.load_weights("/home/sbasak3/DELPHI/models/CNN_BERT+.h5",by_name=True)
+        model.load_weights(args.tmp_dir + "/" + "CNN_DELPHI_v2.h5",by_name=True)
         logging.info("loading weight RNN")
-        model.load_weights("/home/sbasak3/DELPHI/models/RNN_BERT+.h5",by_name=True)
+        model.load_weights(args.tmp_dir + "/" + "RNN_DELPHI_v2.h5",by_name=True)
     else:
         logging.error("model_structure error")
         exit(1)
@@ -449,8 +443,15 @@ def BuildModel(args):
 
 
 def Train(args, all_features_np3D, all_labels_2D_np):
-    mc = ModelCheckpoint(args.tmp_dir + "/" + "SavedModelAndWeights.h5", monitor='val_loss',
-                         mode='min', verbose=1, save_best_only=True)
+    if (int(args.model_structure) == 1):
+        mc = ModelCheckpoint(args.tmp_dir + "/" + "RNN_DELPHI_v2.h5", monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+    elif (int(args.model_structure) == 2):
+        mc = ModelCheckpoint(args.tmp_dir + "/" + "CNN_DELPHI_v2.h5", monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+    elif (int(args.model_structure) == 3):
+        mc = ModelCheckpoint(args.tmp_dir + "/" + "DELPHI_cpu_HSP_new_BERT_v2.h5", monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+    else:
+        logging.error("model_structure error")
+        exit(1)
     # spiting the data into training(9/10) and validation(1/10)
     kfold = KFold(n_splits=10, shuffle=False)
     split_idx = 0
@@ -497,7 +498,6 @@ ECO_test_dic = {}
 RAA_test_dic = {}
 RSA_test_dic = {}
 Pro2Vec_1D_test_dic = {}
-ELMo_test_dic = {}
 BERT_test_dic = {}
 Anchor_test_dic = {}
 HSP_test_dic = {}
